@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HyperPay — Apple Pay Test</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e5;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      padding: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e0e0e5;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f5;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-body { padding: 18px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3a3a3c;
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+    label:first-child { margin-top: 0; }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #c7c7cc;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      color: #1d1d1f;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0071e3;
+      box-shadow: 0 0 0 3px rgba(0,113,227,0.15);
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      background: #0071e3;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: #0077ed; }
+    .btn:active { background: #005bb5; }
+
+    .btn-secondary {
+      background: #f5f5f7;
+      color: #1d1d1f;
+      border: 1px solid #c7c7cc;
+      margin-top: 8px;
+    }
+    .btn-secondary:hover { background: #e8e8ed; }
+
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid #f5f5f7;
+      font-size: 14px;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-ok { background: #34c759; }
+    .dot-warn { background: #ff9500; }
+    .dot-err { background: #ff3b30; }
+    .dot-idle { background: #c7c7cc; }
+
+    .env-note {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #856404;
+      margin-bottom: 14px;
+    }
+
+    #widget-area {
+      min-height: 280px;
+      position: relative;
+    }
+    #widget-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #aeaeb2;
+      font-size: 14px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #e0e0e5;
+      border-top-color: #0071e3;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #log-area {
+      background: #1c1c1e;
+      color: #a8ff60;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 14px;
+      border-radius: 0 0 12px 12px;
+      min-height: 120px;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-err { color: #ff6b6b; }
+    .log-warn { color: #ffd60a; }
+    .log-info { color: #64d2ff; }
+
+    .wpwl-container { width: 100% !important; }
+    .wpwl-form { max-width: 100% !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <rect width="24" height="24" rx="6" fill="#000"/>
+    <path d="M12 5C10.07 5 8.5 6.57 8.5 8.5c0 .28.03.55.09.8C6.6 9.75 5 11.48 5 13.5 5 15.99 7.01 18 9.5 18h5c2.49 0 4.5-2.01 4.5-4.5 0-2.02-1.6-3.75-3.59-4.2.06-.25.09-.52.09-.8C15.5 6.57 13.93 5 12 5z" fill="white" opacity="0.9"/>
+  </svg>
+  <h1>HyperPay Apple Pay — Test Page</h1>
+  <span class="badge">TEST ENV</span>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: Config Panel -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">Payment Config</div>
+      <div class="card-body">
+        <div class="env-note">
+          ⚠️ Use your <strong>TEST</strong> checkout ID from HyperPay sandbox.
+        </div>
+
+        <label>Checkout URL (payUrl)</label>
+        <input type="text" id="inp-payUrl" placeholder="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=XXXX" />
+
+        <label>Merchant Identifier</label>
+        <input type="text" id="inp-merchantId" placeholder="merchant.com.yourapp" value="merchant.com.test" />
+
+        <label>Display Name</label>
+        <input type="text" id="inp-displayName" placeholder="My Store" value="MyStore" />
+
+        <div class="row">
+          <div>
+            <label>Amount</label>
+            <input type="number" id="inp-amount" value="99.00" step="0.01" min="0" />
+          </div>
+          <div>
+            <label>Currency</label>
+            <select id="inp-currency">
+              <option value="SAR">SAR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="AED">AED</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Language</label>
+        <select id="inp-lang">
+          <option value="en">English (en)</option>
+          <option value="ar">Arabic (ar)</option>
+        </select>
+
+        <label>Check Availability</label>
+        <select id="inp-checkAvail">
+          <option value="applePayCapabilities">applePayCapabilities (recommended)</option>
+          <option value="canMakePayments">canMakePayments</option>
+          <option value="canMakePaymentsWithActiveCard">canMakePaymentsWithActiveCard</option>
+        </select>
+
+        <label>Button Type</label>
+        <select id="inp-btnType">
+          <option value="buy">buy</option>
+          <option value="pay">pay</option>
+          <option value="plain">plain</option>
+          <option value="check-out">check-out</option>
+          <option value="donate">donate</option>
+          <option value="book">book</option>
+          <option value="subscribe">subscribe</option>
+        </select>
+
+        <label>Button Style</label>
+        <select id="inp-btnStyle">
+          <option value="black">black</option>
+          <option value="white-outline">white-outline</option>
+          <option value="white">white</option>
+        </select>
+
+        <button class="btn" onclick="loadWidget()">Load Payment Widget</button>
+        <button class="btn btn-secondary" onclick="clearWidget()">Clear Widget</button>
+      </div>
+    </div>
+
+    <!-- Preflight Checklist -->
+    <div class="card">
+      <div class="card-header">Preflight Checklist</div>
+      <div class="card-body" style="padding: 10px 18px;">
+        <ul class="checklist" id="checklist">
+          <li><span class="dot dot-idle" id="chk-safari"></span><span>Safari browser</span></li>
+          <li><span class="dot dot-idle" id="chk-https"></span><span>HTTPS / localhost</span></li>
+          <li><span class="dot dot-idle" id="chk-apple"></span><span>Apple device or Mac</span></li>
+          <li><span class="dot dot-idle" id="chk-apipay"></span><span>Apple Pay API available</span></li>
+          <li><span class="dot dot-idle" id="chk-checkout"></span><span>Checkout ID provided</span></li>
+          <li><span class="dot dot-idle" id="chk-merchant"></span><span>Merchant ID provided</span></li>
+        </ul>
+        <button class="btn btn-secondary" style="margin-top:12px;" onclick="runChecklist()">Run Checks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Widget + Logs -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <div class="card">
+      <div class="card-header">Payment Widget Output</div>
+      <div class="card-body" id="widget-area">
+        <div id="widget-placeholder">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="#f0f0f5"/>
+            <path d="M20 10C16.13 10 13 13.13 13 17c0 .47.05.92.15 1.35C9.99 19.24 8 21.63 8 24.5 8 27.98 10.02 31 14 31h12c3.98 0 6-3.02 6-6.5 0-2.87-1.99-5.26-5.15-5.65.1-.43.15-.88.15-1.35C27 13.13 23.87 10 20 10z" fill="#aeaeb2"/>
+          </svg>
+          <span>Configure and click "Load Payment Widget"</span>
+        </div>
+        <div class="spinner" id="spinner"></div>
+        <div id="payment-form-container"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Console Log</span>
+        <button onclick="clearLog()" style="background:none;border:none;color:#aeaeb2;cursor:pointer;font-size:12px;">Clear</button>
+      </div>
+      <div id="log-area">Waiting for events...\n</div>
+    </div>
+
+    <!-- Generated wpwlOptions Preview -->
+    <div class="card">
+      <div class="card-header">Generated wpwlOptions</div>
+      <div id="log-area" style="border-radius: 0 0 12px 12px; min-height:80px;" id="options-preview">Fill config and load widget to see options...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var _logEl = document.getElementById('log-area');
+  var _scriptTag = null;
+  var _formTag = null;
+
+  function log(msg, type) {
+    var cls = type === 'err' ? 'log-err' : type === 'warn' ? 'log-warn' : type === 'info' ? 'log-info' : '';
+    var ts = new Date().toLocaleTimeString();
+    var line = document.createElement('span');
+    if (cls) line.className = cls;
+    line.textContent = '[' + ts + '] ' + msg + '\n';
+    _logEl.appendChild(line);
+    _logEl.scrollTop = _logEl.scrollHeight;
+  }
+
+  function clearLog() {
+    _logEl.innerHTML = '';
+    log('Log cleared.', 'info');
+  }
+
+  function getVal(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  function extractCheckoutId(url) {
+    try {
+      var u = new URL(url);
+      return u.searchParams.get('checkoutId') || u.searchParams.get('checkoutid') || '';
+    } catch(e) {
+      var m = url.match(/checkoutId=([^&"']+)/i);
+      return m ? decodeURIComponent(m[1]) : '';
+    }
+  }
+
+  function clearWidget() {
+    if (_scriptTag && _scriptTag.parentNode) _scriptTag.parentNode.removeChild(_scriptTag);
+    if (_formTag && _formTag.parentNode) _formTag.parentNode.removeChild(_formTag);
+    _scriptTag = null;
+    _formTag = null;
+    document.getElementById('payment-form-container').innerHTML = '';
+    document.getElementById('widget-placeholder').style.display = 'flex';
+    document.getElementById('spinner').style.display = 'none';
+    try { if (window.wpwl && window.wpwl.unload) window.wpwl.unload(); } catch(e) {}
+    log('Widget cleared.', 'warn');
+  }
+
+  function loadWidget() {
+    var payUrl = getVal('inp-payUrl');
+    var merchantId = getVal('inp-merchantId');
+    var displayName = getVal('inp-displayName');
+    var amount = parseFloat(document.getElementById('inp-amount').value).toFixed(2);
+    var currency = getVal('inp-currency');
+    var lang = getVal('inp-lang');
+    var checkAvail = getVal('inp-checkAvail');
+    var btnType = getVal('inp-btnType');
+    var btnStyle = getVal('inp-btnStyle');
+
+    if (!payUrl) {
+      log('ERROR: Checkout URL is required!', 'err');
+      alert('Please enter the Checkout URL (payUrl)');
+      return;
+    }
+
+    clearWidget();
+
+    var checkoutId = extractCheckoutId(payUrl);
+    log('Checkout ID: ' + (checkoutId || '(not found in URL)'), checkoutId ? 'info' : 'warn');
+
+    document.getElementById('widget-placeholder').style.display = 'none';
+    document.getElementById('spinner').style.display = 'block';
+
+    window.wpwlOptions = {
+      style: 'plain',
+      brandDetection: true,
+      locale: lang,
+      paymentTarget: '_top',
+      applePay: {
+        version: 3,
+        checkAvailability: checkAvail,
+        merchantIdentifier: merchantId,
+        buttonSource: 'js',
+        buttonStyle: btnStyle,
+        buttonType: btnType,
+        displayName: displayName || 'MyStore',
+        total: {
+          label: displayName || 'MyStore',
+          amount: amount
+        },
+        currencyCode: currency,
+        merchantCapabilities: ['supports3DS'],
+        supportedNetworks: ['visa', 'masterCard', 'mada', 'amex'],
+        onCancel: function() {
+          log('Apple Pay: onCancel triggered', 'warn');
+        },
+        onPaymentMethodSelected: function(pm) {
+          log('Apple Pay: onPaymentMethodSelected → type=' + pm.type, 'info');
+          return {
+            newTotal: { label: displayName || 'MyStore', amount: amount }
+          };
+        },
+        onPaymentAuthorized: function(payment) {
+          log('Apple Pay: onPaymentAuthorized → ' + JSON.stringify(payment).slice(0, 120), 'info');
+        }
+      }
+    };
+
+    var preview = document.querySelectorAll('#log-area')[1];
+    if (preview) preview.textContent = JSON.stringify(window.wpwlOptions, null, 2);
+
+    log('wpwlOptions set. Loading script from: ' + payUrl, 'info');
+
+    var container = document.getElementById('payment-form-container');
+
+    _formTag = document.createElement('form');
+    _formTag.id = 'paymentForm';
+    _formTag.className = 'paymentWidgets';
+    _formTag.setAttribute('data-brands', 'VISA MASTER MADA APPLEPAY');
+    _formTag.action = window.location.href;
+    container.appendChild(_formTag);
+
+    _scriptTag = document.createElement('script');
+    _scriptTag.src = payUrl;
+    _scriptTag.async = true;
+
+    _scriptTag.onload = function() {
+      document.getElementById('spinner').style.display = 'none';
+      log('Script loaded successfully.', 'info');
+      log('wpwl object: ' + (window.wpwl ? 'FOUND ✓' : 'NOT FOUND ✗'), window.wpwl ? 'info' : 'err');
+    };
+
+    _scriptTag.onerror = function() {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('widget-placeholder').style.display = 'flex';
+      log('ERROR: Script failed to load. Checkout ID may be expired or invalid.', 'err');
+    };
+
+    document.body.appendChild(_scriptTag);
+    log('Script tag injected into DOM.', 'info');
+  }
+
+  function runChecklist() {
+    var ua = navigator.userAgent;
+    var isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    var isApple = /iPhone|iPad|iPod|Mac/.test(ua);
+    var isHttps = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    var hasApplePay = !!(window.ApplePaySession);
+    var hasCheckout = !!getVal('inp-payUrl');
+    var hasMerchant = !!getVal('inp-merchantId');
+
+    function setDot(id, ok, warn) {
+      var el = document.getElementById(id);
+      el.className = 'dot ' + (ok ? 'dot-ok' : (warn ? 'dot-warn' : 'dot-err'));
+    }
+
+    setDot('chk-safari', isSafari, false);
+    setDot('chk-https', isHttps, false);
+    setDot('chk-apple', isApple, !isApple);
+    setDot('chk-apipay', hasApplePay, !hasApplePay);
+    setDot('chk-checkout', hasCheckout, false);
+    setDot('chk-merchant', hasMerchant, false);
+
+    log('--- Preflight Check ---', 'info');
+    log('Safari: ' + isSafari, isSafari ? 'info' : 'err');
+    log('HTTPS/localhost: ' + isHttps, isHttps ? 'info' : 'err');
+    log('Apple Device: ' + isApple, isApple ? 'info' : 'warn');
+    log('ApplePaySession API: ' + hasApplePay, hasApplePay ? 'info' : 'err');
+    log('Checkout URL provided: ' + hasCheckout, hasCheckout ? 'info' : 'err');
+    log('Merchant ID provided: ' + hasMerchant, hasMerchant ? 'info' : 'err');
+
+    if (hasApplePay) {
+      try {
+        var canPay = ApplePaySession.canMakePayments();
+        log('ApplePaySession.canMakePayments(): ' + canPay, canPay ? 'info' : 'warn');
+      } catch(e) {
+        log('ApplePaySession.canMakePayments() threw: ' + e.message, 'err');
+      }
+    }
+    log('-----------------------', 'info');
+  }
+
+  runChecklist();
+  document.getElementById('inp-payUrl').addEventListener('input', function() {
+    var id = extractCheckoutId(this.value);
+    if (id) log('Detected checkoutId: ' + id, 'info');
+  });
+</script>
+</body>
+</html>
